@@ -2,11 +2,11 @@
 
 <br>
   <% @results.each do |row| %>
+  <br>
+  <h4><%= row['author'] %> says <%= row['created_date'] %></h4>
 <p>
   <%= row['content'] %>
   <br>
-  <br>
-  Added at  <%= row['created_date'] %>
   <br>
   <br>
   <a href="/details/<%= row['id']%>">Comments</a>

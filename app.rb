@@ -15,7 +15,7 @@ end
 
 configure do
   init_db
-  @db.execute 'CREATE TABLE IF NOT EXISTS "Posts" ("id" INTEGER PRIMARY KEY AUTOINCREMENT, "created_date" DATE, "content" TEXT);'
+  @db.execute 'CREATE TABLE IF NOT EXISTS "Posts" ("id" INTEGER PRIMARY KEY AUTOINCREMENT, "created_date" DATE, "content" TEXT, "author" TEXT);'
   @db.execute 'CREATE TABLE IF NOT EXISTS "Comments" ("id" INTEGER PRIMARY KEY AUTOINCREMENT, "created_date" DATE, "content" TEXT, "post_id" INTEGER );'
 end
 
@@ -30,13 +30,14 @@ end
 
 post '/new' do
   content = params[:content]
+  author = params[:author]
 
   if content.length <= 0
     @error = 'Type post text'
     return erb :new
   end
 
-  @db.execute 'insert into Posts (content, created_date) values (?, datetime())', [content]
+  @db.execute 'insert into Posts (content, created_date, author) values (?, datetime(), ?)', [content, author]
 
   redirect to '/'
 end
@@ -55,6 +56,11 @@ end
 post '/details/:post_id' do
   post_id = params[:post_id]
   content = params[:content]
+
+  if content.length <= 0
+    @error = 'your comment is empty'
+    redirect to '/details/' + post_id
+  end
 
   @db.execute 'insert into Comments (content, created_date, post_id) values (?, datetime(), ?)', [content, post_id]
 
