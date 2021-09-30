@@ -1,30 +1,31 @@
-<h4>Post details:</h4>
-<p>
-<%= @row['content'] %>
+<h3>Post details:</h3>
 <br>
+ Author:
+<%= @post.author %></p>
+<p style="font-weight: bold"><%= @post.content %></p>
+<p><%= @post.created_at %></p>
 <br>
-Added at  <%= @row['created_date'] %>
-<br>
-<br>
+
 </p>
 
-<br>
-<h4>Comments:</h4>
-<% @comments.each do |comment| %>
-  <br>
 
-<p>
-  <%= comment['content'] %>
-  <br>
-  Added at <%= comment['created_date'] %>
-</p>
+<h4>Comments</h4>
+<% @comments.each do |row| %>
+<p style="font-weight: bold"><%= row['name'] %> says:</p>
+<p><%= row['comment'] %></p>
+<p><%= row['created_at'] %></p>
   <hr>
   <% end %>
-<p>
 
-<form action="/details/<%= @row['id'] %>" method="post"role="form">
+
+<br>
+<form action="/details/<%= @post.id %>" method="post"role="form">
   <div class="form-group">
-    <textarea class="form-control" rows="6" placeholder="Type comment text here" name="content"></textarea>
+    <label for="author">Name</label>
+    <input type="text" class="form-control" placeholder="Name" id="author" name="comment[name]">
+  </div>
+  <div class="form-group">
+    <textarea class="form-control" rows="6" placeholder="Type comment text here" name="comment[comment]"></textarea>
   </div>
   <button type="submit" class="btn btn-primary">Add comment</button>
 </form>

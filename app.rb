@@ -2,67 +2,64 @@
 require 'rubygems'
 require 'sinatra'
 require 'sinatra/reloader'
-require 'sqlite3'
+require 'sinatra/activerecord'
 
-def init_db
-  @db = SQLite3::Database.new('leprosorium.db')
-  @db.results_as_hash = true
+set :database,{ adapter: "sqlite3", database: "leprosorium.db" }
+
+class Post < ActiveRecord::Base
+  has_many :comments
+  validates :author, presence: true
+  validates :content, presence: true
 end
 
-before do
-  init_db
+class Comment < ActiveRecord::Base
+  belongs_to :post
+  validates :name, presence: true
+  validates :comment, presence: true
 end
 
-configure do
-  init_db
-  @db.execute 'CREATE TABLE IF NOT EXISTS "Posts" ("id" INTEGER PRIMARY KEY AUTOINCREMENT, "created_date" DATE, "content" TEXT, "author" TEXT);'
-  @db.execute 'CREATE TABLE IF NOT EXISTS "Comments" ("id" INTEGER PRIMARY KEY AUTOINCREMENT, "created_date" DATE, "content" TEXT, "post_id" INTEGER );'
-end
 
 get '/' do
-  @results = @db.execute 'select * from Posts order by id desc'
+  @posts = Post.all
   erb :index
 end
 
 get '/new' do
+  @p = Post.new
   erb :new
 end
 
 post '/new' do
-  content = params[:content]
-  author = params[:author]
+  @p = Post.new params[:post]
+  @p.save
 
-  if content.length <= 0
-    @error = 'Type post text'
-    return erb :new
+  if @p.save
+    erb "<p>Post added</p>"
+  else
+    @error = @p.errors.full_messages.first
+    erb :new
   end
-
-  @db.execute 'insert into Posts (content, created_date, author) values (?, datetime(), ?)', [content, author]
-
-  redirect to '/'
 end
 
-get '/details/:post_id' do
-  post_id = params[:post_id]
-  results = @db.execute 'select * from Posts where id = ?', [post_id]
-  @row = results[0]
-
-  @comments = @db.execute 'select * from Comments where post_id = ? order by id', [post_id]
-
+get '/details/:id' do
+  @post = Post.find(params[:id])
+  @comments = Comment.where(post_id: @post.id)
   erb :details
-
 end
 
-post '/details/:post_id' do
-  post_id = params[:post_id]
-  content = params[:content]
+post '/details/:id' do
+  # @comment = Comment.find(params[:id])
+  @post = Post.find(params[:id])
 
-  if content.length <= 0
-    @error = 'your comment is empty'
-    redirect to '/details/' + post_id
+  @c = Comment.new params[:comment]
+  @c.post_id = @post[:id]
+  @c.save
+
+  if @c.save
+    erb "<p>Comment added</p>"
+  else
+    @c.errors.full_messages.first
+    erb :details
   end
 
-  @db.execute 'insert into Comments (content, created_date, post_id) values (?, datetime(), ?)', [content, post_id]
-
-  redirect to ('/details/' + post_id)
 end
